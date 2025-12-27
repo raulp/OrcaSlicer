@@ -611,7 +611,12 @@ void PartPlate::calc_vertex_for_number(int index, bool one_number, GLModel &buff
     float size     = PARTPLATE_ICON_SIZE     * factor;
     float offset_y = PARTPLATE_TEXT_OFFSET_Y * factor;
     float offset_x = (one_number?PARTPLATE_TEXT_OFFSET_X1: PARTPLATE_TEXT_OFFSET_X2) * factor;
-    float gap_left = PARTPLATE_ICON_GAP_LEFT * factor;
+    // Use right_icon_offset_bed from config if available, same as right icons
+    int config_offset = 0;
+    if (m_plater) {
+        config_offset = m_plater->get_right_icon_offset_bed(0);
+    }
+    float gap_left = config_offset > 0 ? config_offset : PARTPLATE_ICON_GAP_LEFT * factor;
     p += Vec2d(gap_left,0);
 
     poly.contour.append({ scale_(p(0) + offset_x)       , scale_(p(1) + offset_y) });
@@ -638,7 +643,7 @@ void PartPlate::calc_vertex_for_plate_name_edit_icon(GLTexture *texture, int ind
     float name_width = 0.0;
     if (texture && texture->get_width() > 0 && texture->get_height())
         // original width give correct ratio in here since rendering width can be much higher because of next_highest_power_of_2 for rendering
-        name_width = icon_sz * texture->m_original_width / texture->get_height(); 
+        name_width = icon_sz * texture->m_original_width / texture->get_height();
 
     //if (m_plater && m_plater->get_build_volume_type() == BuildVolume_Type::Circle)
     //    px = scale_(bed_ext.center()(0)) + m_name_texture_width * 0.50 - height * 0.50;
@@ -664,7 +669,12 @@ void PartPlate::calc_vertex_for_icons(int index, PickingModel &model)
     Vec2d p        = bed_ext[2];
     auto  factor   = bed_ext.size()(1) / 200.0;
     float size     = PARTPLATE_ICON_SIZE     * factor;
-    float gap_left = PARTPLATE_ICON_GAP_LEFT * factor;
+    // Use right_icon_offset_bed from config if available, otherwise use default
+    int config_offset = 0;
+    if (m_plater) {
+        config_offset = m_plater->get_right_icon_offset_bed(0);
+    }
+    float gap_left = config_offset > 0 ? config_offset : PARTPLATE_ICON_GAP_LEFT * factor;
     float gap_y    = PARTPLATE_ICON_GAP_Y    * factor;
     float gap_top  = PARTPLATE_ICON_GAP_TOP  * factor;
     p += Vec2d(gap_left,-1 * (index * (size + gap_y) + gap_top));
@@ -6151,22 +6161,23 @@ void PartPlateList::BedTextureInfo::reset()
 void PartPlateList::init_bed_type_info()
 {
 	BedTextureInfo::TexturePart pct_part_left(10, 130,  10, 110, "orca_bed_pct_left.svg");
-    BedTextureInfo::TexturePart st_part1(9, 70, 12.5, 170, "bbl_bed_st_left.svg");
+    BedTextureInfo::TexturePart st_part1(10, 52, 8.393f, 192, "bbl_bed_st_left.svg");
     BedTextureInfo::TexturePart st_part2(74, -10, 148, 12, "bbl_bed_st_bottom.svg");
-	BedTextureInfo::TexturePart pc_part1(10, 130, 10, 110, "bbl_bed_pc_left.svg");
+	BedTextureInfo::TexturePart pc_part1(10, 52, 8.393f, 192, "bbl_bed_pc_left.svg");
 	BedTextureInfo::TexturePart pc_part2(74, -10, 148, 12, "bbl_bed_pc_bottom.svg");
-	BedTextureInfo::TexturePart ep_part1(7.5, 90, 12.5, 150, "bbl_bed_ep_left.svg");
+	BedTextureInfo::TexturePart ep_part1(10, 52, 8.393f, 192, "bbl_bed_ep_left.svg");
 	BedTextureInfo::TexturePart ep_part2(74, -10, 148, 12, "bbl_bed_ep_bottom.svg");
-	BedTextureInfo::TexturePart pei_part1(7.5, 50, 12.5, 190, "bbl_bed_pei_left.svg");
+	BedTextureInfo::TexturePart pei_part1(10, 52, 8.393f, 192, "bbl_bed_pei_left.svg");
 	BedTextureInfo::TexturePart pei_part2(74, -10, 148, 12, "bbl_bed_pei_bottom.svg");
-	BedTextureInfo::TexturePart pte_part1(10, 80, 10, 160, "bbl_bed_pte_left.svg");
-	BedTextureInfo::TexturePart pte_part2(74, -10, 148,  12, "bbl_bed_pte_bottom.svg");
+	BedTextureInfo::TexturePart pte_part1(10, 52, 8.393f, 192, "bbl_bed_pte_left.svg");
+	BedTextureInfo::TexturePart pte_part2(74, -10, 148, 12, "bbl_bed_pte_bottom.svg");
     auto bed_texture_maps        = wxGetApp().plater()->get_bed_texture_maps();
     std::string bottom_texture_end_name = bed_texture_maps.find("bottom_texture_end_name") != bed_texture_maps.end() ? bed_texture_maps["bottom_texture_end_name"] : "";
     std::string bottom_texture_rect_str = bed_texture_maps.find("bottom_texture_rect") != bed_texture_maps.end() ? bed_texture_maps["bottom_texture_rect"] : "";
+    std::string bottom_texture_rect_longer_str = bed_texture_maps.find("bottom_texture_rect_longer") != bed_texture_maps.end() ? bed_texture_maps["bottom_texture_rect_longer"] : "";
     std::string middle_texture_rect_str = bed_texture_maps.find("middle_texture_rect") != bed_texture_maps.end() ? bed_texture_maps["middle_texture_rect"] : "";
     std::string use_double_extruder_default_texture = bed_texture_maps.find("use_double_extruder_default_texture") != bed_texture_maps.end() ? bed_texture_maps["use_double_extruder_default_texture"] : "";
-    std::array<float, 4>        bottom_texture_rect = {0, 0, 0, 0}, middle_texture_rect = {0, 0, 0, 0};
+    std::array<float, 4>        bottom_texture_rect = {0, 0, 0, 0}, bottom_texture_rect_longer = {0, 0, 0, 0}, middle_texture_rect = {0, 0, 0, 0};
     if (bottom_texture_rect_str.size() > 0) {
         std::vector<std::string> items;
         boost::algorithm::erase_all(bottom_texture_rect_str, " ");
@@ -6174,6 +6185,16 @@ void PartPlateList::init_bed_type_info()
         if (items.size() == 4) {
             for (int i = 0; i < items.size(); i++) {
                 bottom_texture_rect[i] = std::atof(items[i].c_str());
+            }
+        }
+    }
+    if (bottom_texture_rect_longer_str.size() > 0) {
+        std::vector<std::string> items;
+        boost::algorithm::erase_all(bottom_texture_rect_longer_str, " ");
+        boost::split(items, bottom_texture_rect_longer_str, boost::is_any_of(","));
+        if (items.size() == 4) {
+            for (int i = 0; i < items.size(); i++) {
+                bottom_texture_rect_longer[i] = std::atof(items[i].c_str());
             }
         }
     }
@@ -6197,9 +6218,12 @@ void PartPlateList::init_bed_type_info()
         }
         pte_part2 = BedTextureInfo::TexturePart(45, -14.5, 70, 8, "bbl_bed_pte_left_bottom.svg");
         auto &bottom_rect = bottom_texture_rect;
+        auto &bottom_rect_longer = bottom_texture_rect_longer;
         if (bottom_texture_end_name.size() > 0 && bottom_rect[2] > 0.f) {
             std::string pte_part2_name = "bbl_bed_pte_bottom_" + bottom_texture_end_name + ".svg";
             pte_part2 = BedTextureInfo::TexturePart(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3], pte_part2_name);
+        } else if (bottom_rect[2] > 0.f) {
+            pte_part2.update_pos(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3]);
         }
 
         pei_part1  = BedTextureInfo::TexturePart(57, 300, 236.12f, 10.f, "bbl_bed_pei_middle.svg");
@@ -6210,6 +6234,8 @@ void PartPlateList::init_bed_type_info()
         if (bottom_texture_end_name.size() > 0 && bottom_rect[2] > 0.f) {
             std::string pei_part2_name = "bbl_bed_pei_bottom_" + bottom_texture_end_name + ".svg";
             pei_part2                  = BedTextureInfo::TexturePart(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3], pei_part2_name);
+        } else if (bottom_rect[2] > 0.f) {
+            pei_part2.update_pos(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3]);
         }
 
         st_part1 = BedTextureInfo::TexturePart(57, 300, 236.12f, 10.f, "bbl_bed_st_middle.svg");
@@ -6220,6 +6246,10 @@ void PartPlateList::init_bed_type_info()
         if (bottom_texture_end_name.size() > 0 && bottom_rect[2] > 0.f) {
             std::string st_part2_name = "bbl_bed_st_bottom_" + bottom_texture_end_name + ".svg";
             st_part2                   = BedTextureInfo::TexturePart(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3], st_part2_name);
+        } else if (bottom_rect_longer[2] > 0.f) {
+            st_part2.update_pos(bottom_rect_longer[0], bottom_rect_longer[1], bottom_rect_longer[2], bottom_rect_longer[3]);
+        } else if (bottom_rect[2] > 0.f) {
+            st_part2.update_pos(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3]);
         }
 
         ep_part1 = BedTextureInfo::TexturePart(57, 300, 236.12f, 10.f, "bbl_bed_ep_middle.svg");
@@ -6230,6 +6260,10 @@ void PartPlateList::init_bed_type_info()
         if (bottom_texture_end_name.size() > 0 && bottom_rect[2] > 0.f) {
             std::string ep_part2_name = "bbl_bed_ep_bottom_" + bottom_texture_end_name + ".svg";
             ep_part2                   = BedTextureInfo::TexturePart(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3], ep_part2_name);
+        } else if (bottom_rect_longer[2] > 0.f) {
+            ep_part2.update_pos(bottom_rect_longer[0], bottom_rect_longer[1], bottom_rect_longer[2], bottom_rect_longer[3]);
+        } else if (bottom_rect[2] > 0.f) {
+            ep_part2.update_pos(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3]);
         }
 
         pc_part1 = BedTextureInfo::TexturePart(57, 300, 236.12f, 10.f, "bbl_bed_pc_middle.svg");
@@ -6239,6 +6273,8 @@ void PartPlateList::init_bed_type_info()
         if (bottom_texture_end_name.size() > 0 && bottom_rect[2] > 0.f) {
             std::string pc_part2_name = "bbl_bed_pc_bottom_" + bottom_texture_end_name + ".svg";
             pc_part2                  = BedTextureInfo::TexturePart(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3], pc_part2_name);
+        } else if (bottom_rect[2] > 0.f) {
+            pc_part2.update_pos(bottom_rect[0], bottom_rect[1], bottom_rect[2], bottom_rect[3]);
         }
 
         m_allow_bed_type_in_double_nozzle.clear();

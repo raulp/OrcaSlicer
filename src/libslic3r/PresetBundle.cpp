@@ -3750,6 +3750,12 @@ std::pair<PresetsConfigSubstitutions, size_t> PresetBundle::load_vendor_configs_
                 else if (boost::iequals(it.key(), BBL_JSON_KEY_HOTEND_MODEL)) {
                     model.hotend_model = it.value();
                 }
+                else if (boost::iequals(it.key(), BBL_JSON_KEY_RIGHT_ICON_OFFSET_BED)) {
+                    model.right_icon_offset_bed = it.value();
+                }
+                else if (boost::iequals(it.key(), BBL_JSON_KEY_BOTTOM_TEXTURE_RECT_LONGER)) {
+                    model.bottom_texture_rect_longer = it.value();
+                }
                 else if (boost::iequals(it.key(), BBL_JSON_KEY_DEFAULT_MATERIALS)) {
                     //get machine list
                     std::string default_materials_field = it.value();

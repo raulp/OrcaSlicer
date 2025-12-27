@@ -671,6 +671,13 @@ public:
                 filename = file;
             }
 
+            void update_pos(float xx, float yy, float ww, float hh) {
+                x = xx;
+                y = yy;
+                w = ww;
+                h = hh;
+            }
+
             void update_buffer();
             void reset();
         };
