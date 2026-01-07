@@ -519,11 +519,15 @@ void GLModel::init_from(const Polygons& polygons, float z)
 
 bool GLModel::init_from_file(const std::string& filename)
 {
-    if (!boost::filesystem::exists(filename))
+    if (!boost::filesystem::exists(filename)) {
+        BOOST_LOG_TRIVIAL(error) << "GLModel::init_from_file: File not found: " << filename;
         return false;
+    }
 
-    if (!boost::algorithm::iends_with(filename, ".stl"))
+    if (!boost::algorithm::iends_with(filename, ".stl")) {
+        BOOST_LOG_TRIVIAL(error) << "GLModel::init_from_file: Not an STL file: " << filename;
         return false;
+    }
 
     Model model;
     try {

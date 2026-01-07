@@ -67,6 +67,8 @@
 #define BBL_JSON_KEY_MIDDLE_TEXTURE_RECT        "middle_texture_rect"
 
 #define BBL_JSON_KEY_HOTEND_MODEL               "hotend_model"
+#define BBL_JSON_KEY_RIGHT_ICON_OFFSET_BED      "right_icon_offset_bed"
+#define BBL_JSON_KEY_BOTTOM_TEXTURE_RECT_LONGER "bottom_texture_rect_longer"
 #define BBL_JSON_KEY_DEFAULT_MATERIALS          "default_materials"
 #define BBL_JSON_KEY_NOT_SUPPORT_BED_TYPE       "not_support_bed_type"
 #define BBL_JSON_KEY_MODEL_ID                   "model_id"
@@ -132,6 +134,8 @@ public:
         std::string                 bottom_texture_rect;
         std::string                 middle_texture_rect;
         std::string                 hotend_model;
+        std::string                 right_icon_offset_bed;
+        std::string                 bottom_texture_rect_longer;
         PrinterVariant*       variant(const std::string &name) {
             for (auto &v : this->variants)
                 if (v.name == name)

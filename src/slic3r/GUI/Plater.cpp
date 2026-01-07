@@ -5285,12 +5285,30 @@ std::map<std::string, std::string> Plater::get_bed_texture_maps()
         if (pm->bottom_texture_rect.size() > 0) {
             maps["bottom_texture_rect"] = pm->bottom_texture_rect;
         }
+        if (pm->bottom_texture_rect_longer.size() > 0) {
+            maps["bottom_texture_rect_longer"] = pm->bottom_texture_rect_longer;
+        }
         if (pm->middle_texture_rect.size() > 0) {
             maps["middle_texture_rect"] = pm->middle_texture_rect;
         }
         return maps;
     }
     return {};
+}
+
+int Plater::get_right_icon_offset_bed(int i)
+{
+    auto pm = get_curr_printer_model();
+    if (pm && pm->right_icon_offset_bed.size() > 0) {
+        std::vector<std::string> parts;
+        boost::split(parts, pm->right_icon_offset_bed, boost::is_any_of(";"));
+        if (parts.size() == 1 && i == 0) {
+            return std::stoi(pm->right_icon_offset_bed);
+        } else if (i < parts.size()) {
+            return std::stoi(parts[i]);
+        }
+    }
+    return 0;
 }
 
 bool Plater::get_enable_wrapping_detection()
